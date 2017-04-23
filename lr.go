@@ -22,15 +22,35 @@ func PrintHelp(errcode int) {
 }
 
 func GetArgs() map[string]string {
-	addr := os.Getenv("REGISTRY_ADDRESS")
-	user := os.Getenv("REGISTRY_USER")
-	password := os.Getenv("REGISTRY_PASSWORD")
+	// try to get connection info from file: ~/.lr.json
+	var addr, user, password string
+	type Config struct {
+		Addr, User, Password string
+	}
+	file, _ := os.Open(os.Getenv("HOME") + "/.lr.json")
+	decoder := json.NewDecoder(file)
+	config := Config{}
+	errJson := decoder.Decode(&config)
+
+	if errJson == nil {
+		addr = config.Addr
+		user = config.User
+		password = config.Password
+	} else {
+		// fallback to env vars if config json parsing failed
+		addr = os.Getenv("REGISTRY_ADDRESS")
+		user = os.Getenv("REGISTRY_USER")
+		password = os.Getenv("REGISTRY_PASSWORD")
+	}
 
 	if addr == "" || user == "" || password == "" {
-		fmt.Printf("Specify registry connection information with env vars, i.e.:\n" +
-			"export REGISTRY_ADDRESS=https://registry.example.com\n" +
-			"export REGISTRY_USER=user\n" +
-			"export REGISTRY_PASSWORD=password\n")
+		fmt.Printf("Set registry connection information inside config file ~/.lr.json:\n" +
+			`  {"addr":"https://registry.example.com","user":"myuser","password":"mypassword"}` +
+			"\nor with env variables:\n" +
+			"  export REGISTRY_ADDRESS=https://registry.example.com\n" +
+			"  export REGISTRY_USER=myuser\n" +
+			"  export REGISTRY_PASSWORD=mypassword\n" +
+			"note that config file takes precedence over env vars\n")
 		os.Exit(1)
 	}
 
