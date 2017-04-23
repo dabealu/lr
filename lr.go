@@ -7,29 +7,29 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 	"strings"
+	"time"
 )
 
 func PrintHelp(errcode int) {
-	fmt.Printf("Usage:\n"+
-		"  ls-images                 list registry images (short: li)\n"+
-		"  ls-tags image             list tags of an image (short: lt)\n"+
-		"  rm-image image            remove all image tags (short: ri)\n"+
-		"  rm-tags image:tag1,tag2   remove some image tag(s) (short: rt)\n"+
+	fmt.Printf("Usage:\n" +
+		"  ls-images                 list registry images (short: li)\n" +
+		"  ls-tags image             list tags of an image (short: lt)\n" +
+		"  rm-image image            remove all image tags (short: ri)\n" +
+		"  rm-tags image:tag1,tag2   remove some image tag(s) (short: rt)\n" +
 		"  help                      print help\n")
-  os.Exit(errcode)
+	os.Exit(errcode)
 }
 
 func GetArgs() map[string]string {
 	addr := os.Getenv("REGISTRY_ADDRESS")
 	user := os.Getenv("REGISTRY_USER")
 	password := os.Getenv("REGISTRY_PASSWORD")
-	
-	if addr == "" || user == "" || password =="" {
-		fmt.Printf("Specify registry connection information with env vars, i.e.:\n"+
-			"export REGISTRY_ADDRESS=https://registry.example.com\n"+
-			"export REGISTRY_USER=user\n"+
+
+	if addr == "" || user == "" || password == "" {
+		fmt.Printf("Specify registry connection information with env vars, i.e.:\n" +
+			"export REGISTRY_ADDRESS=https://registry.example.com\n" +
+			"export REGISTRY_USER=user\n" +
 			"export REGISTRY_PASSWORD=password\n")
 		os.Exit(1)
 	}
@@ -41,25 +41,25 @@ func GetArgs() map[string]string {
 		fmt.Printf("Specify action as a first arg, i.e.: %s help\n", os.Args[0])
 		os.Exit(1)
 	}
-	
-  validaction := false
-  for _, a := range []string{"ls-images", "li", "ls-tags", "lt", "rm-image", "ri", "rm-tags", "rt", "help"} {
-    if action == a {
-      validaction = true
-    }
-  }
-  if validaction == false {
+
+	validaction := false
+	for _, a := range []string{"ls-images", "li", "ls-tags", "lt", "rm-image", "ri", "rm-tags", "rt", "help"} {
+		if action == a {
+			validaction = true
+		}
+	}
+	if validaction == false {
 		PrintHelp(1)
-  }
-  
-  var actionarg string
-  if len(os.Args) > 2 {
-    actionarg = os.Args[2]
-  }
+	}
+
+	var actionarg string
+	if len(os.Args) > 2 {
+		actionarg = os.Args[2]
+	}
 
 	var argsMap = map[string]string{
 		"Action":    action,
-    "ActionArg": actionarg,
+		"ActionArg": actionarg,
 		"Address":   addr,
 		"User":      user,
 		"Password":  password,
@@ -70,9 +70,9 @@ func GetArgs() map[string]string {
 
 func GetBody(addr, user, password, action, actionarg string) []byte {
 	switch action {
-  case "ls-images", "li":
-    addr = addr + "/v2/_catalog"
-  case "ls-tags", "lt":
+	case "ls-images", "li":
+		addr = addr + "/v2/_catalog"
+	case "ls-tags", "lt":
 		addr = addr + "/v2/" + actionarg + "/tags/list"
 	}
 
@@ -96,12 +96,12 @@ func GetBody(addr, user, password, action, actionarg string) []byte {
 	if readErr != nil {
 		log.Fatal(readErr)
 	}
-	
+
 	return body
 }
 
 func GetImages(body []byte) {
-	type ImageList struct{
+	type ImageList struct {
 		Field []string `json:"repositories"`
 	}
 	getlist := ImageList{}
@@ -116,7 +116,7 @@ func GetImages(body []byte) {
 }
 
 func GetTags(body []byte) []string {
-	type TagList struct{
+	type TagList struct {
 		Field []string `json:"tags"`
 	}
 	getlist := TagList{}
@@ -125,16 +125,16 @@ func GetTags(body []byte) []string {
 		log.Fatal(jsonErr)
 	}
 
-	return getlist.Field 
+	return getlist.Field
 }
 
 func RmTag(addr, user, password, action, actionarg string) {
 	split := strings.Split(actionarg, ":") // actionarg ex.: image:tag1,tag2
-  image := split[0]
-	
+	image := split[0]
+
 	var tagslist []string
 	switch action {
-  case "rm-image", "ri":
+	case "rm-image", "ri":
 		// get all tags of image and then delete them
 		tagslist = GetTags(GetBody(addr, user, password, "ls-tags", image))
 	case "rm-tags", "rt":
@@ -144,8 +144,8 @@ func RmTag(addr, user, password, action, actionarg string) {
 
 	for _, tag := range tagslist {
 		// get tag digest
-		digestaddr := addr + "/v2/" + image + "/manifests/" + tag 
-		
+		digestaddr := addr + "/v2/" + image + "/manifests/" + tag
+
 		regClient := http.Client{
 			Timeout: time.Second * 5,
 		}
@@ -165,7 +165,7 @@ func RmTag(addr, user, password, action, actionarg string) {
 
 		digest := res.Header.Get("Docker-Content-Digest")
 
-	  // rm tag by digest
+		// rm tag by digest
 		deleteaddr := addr + "/v2/" + image + "/manifests/" + digest
 
 		req, err = http.NewRequest("DELETE", deleteaddr, nil)
@@ -179,7 +179,7 @@ func RmTag(addr, user, password, action, actionarg string) {
 		if getErr != nil {
 			log.Fatal(getErr)
 		}
-		
+
 		status := res.Status
 		fmt.Printf("%s\t%s:%s\t(digest: %s)\n", status, image, tag, digest)
 	}
@@ -187,11 +187,11 @@ func RmTag(addr, user, password, action, actionarg string) {
 
 func main() {
 	args := GetArgs()
-	addr      := args["Address"]
-	user      := args["User"]
-	password  := args["Password"]
-	action    := args["Action"]
-  actionarg := args["ActionArg"]
+	addr := args["Address"]
+	user := args["User"]
+	password := args["Password"]
+	action := args["Action"]
+	actionarg := args["ActionArg"]
 
 	switch action {
 	case "ls-images", "li":
