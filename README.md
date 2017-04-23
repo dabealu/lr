@@ -30,3 +30,7 @@ Run lr from container, i.e. list registry images:
 ```
 docker run --rm -e REGISTRY_ADDRESS=https://registry.example.com -e REGISTRY_USER=usr -e REGISTRY_PASSWORD=passwd lr li
 ```
+**NOTE:** to free disk space after image/tag deletion, we need to perform garbage collection inside registry container:  
+```
+registry garbage-collect /etc/docker/registry/config.yml
+```
