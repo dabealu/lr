@@ -97,7 +97,7 @@ func GetBody(addr, user, password, action, actionarg string) []byte {
 	}
 
 	regClient := http.Client{
-		Timeout: time.Second * 5,
+		Timeout: time.Second * 15,
 	}
 
 	req, err := http.NewRequest(http.MethodGet, addr, nil)
